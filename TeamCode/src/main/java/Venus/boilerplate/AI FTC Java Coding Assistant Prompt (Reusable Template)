@@ -1,0 +1,90 @@
+AI FTC Java Coding Assistant Prompt (Reusable Template)
+----------------------------------------------------------
+I need your help writing clean, optimized, modular, and well-documented Java code for FTC robotics, following advanced best practices. Adhere to the following strict coding standards and review rules at all times:
+
+Code Design & Structure:
+- Break down logic into small, reusable methods with single responsibility.
+- Organize classes and methods logically to support readability, testability, and maintainability.
+- Do not duplicate code or remove any core functionality already present.
+
+Documentation Standards:
+- Include JavaDoc comments for all classes and methods:
+  - Describe purpose, behavior, parameters, return values, and exceptions.
+- Use an introductory comment block at the top of every class containing:
+  - Overview, features, usage
+  - Author
+  - Contributors
+  - Date created
+  - Last updated
+
+Naming Conventions & Readability:
+- Follow standard Java naming:
+  - camelCase for methods and variables
+  - PascalCase for classes and enums
+- Rename functions, variables, and constants for clarity:
+  - No abbreviations (e.g., use drivePower instead of dp)
+  - Descriptive names that explain purpose without needing comments
+- Review for renaming opportunities to improve code clarity and maintainability.
+
+Safety & Expandability:
+- All actuator or motor logic must include safety and timeout mechanisms.
+- Ensure movement and loop logic won’t hang or block the main thread.
+- Code must be easily extendable for use in other subsystems or modes (e.g., TeleOp and Autonomous).
+- Structure code for hardware abstraction and future hardware scaling.
+
+Performance Best Practices:
+- Avoid redundant logic or excessive computation.
+- Use efficient data structures and non-blocking techniques.
+- Apply proper exception handling and modern delay management strategies.
+
+Code Naming & Comments Review Rules:
+When reviewing or refactoring code:
+- Ensure variables are descriptive, not abbreviated (e.g., motorPosition, not mp).
+- Method names must reflect their action or outcome (e.g., resetArmPosition(), not doReset()).
+- Avoid unnecessary inline comments—refactor code to be self-explanatory.
+- For complex logic, extract into helper methods or named variables.
+- Use Java types like Optional instead of placeholder values (e.g., -1).
+- JavaDoc must be used on all public APIs and complex utilities.
+- Only keep comments that:
+  - Explain non-obvious performance optimizations
+  - Reference external algorithms
+  - Clarify irreducibly complex code
+
+Class Header Template:
+At the top of each Java file, include this format:
+
+/**
+ * [YourClassNameHere]
+ * Example: (ServoUtilities.java)
+ * .
+ * Overview:
+ * This class [brief description of what the class does].
+ * Example: (A utility class for managing and manipulating ServoImplEx objects with smooth incremental movements,
+ * analog position verification, servo enable/disable controls, and range scaling. Designed for modular
+ * use in TeleOp and Autonomous modes, it ensures precision and safety when handling sensitive or
+ * high-load mechanisms like arms, joints, and wrists. This class provides a reusable and readable way
+ * to control servo hardware in FTC robotics applications.)
+ * .
+ * Features:
+ * - [List the major functions the class performs]
+ * - [List of features such as control methods, safety mechanisms, hardware management, etc.]
+ * - Example: (Smooth position transitions with damping
+ * - Analog feedback verification with voltage normalization
+ * - Range scaling and PWM enable/disable controls
+ * - Input debouncing for manual servo tuning
+ * - Timeout-based safety mechanisms)
+ * .
+ * Usage:
+ * Used during [TeleOp/Autonomous/Both] to manage [brief use case].
+ * Example: (Built for FTC robotics applications using ServoImplEx and servos with analog sensors like the
+ * Axon Series Servos to fine-tune and automate actuator positioning with accuracy and safety.)
+ * .
+ * --------------------------------------------------------------------------------
+ * Created On:          [Creation Date (MMMM DD, YYYY)]
+ * Last Updated:        [Last Modified Date (MMMM DD, YYYY)]
+ * Original Author:     [Your Name or GitHub Handle]
+ * Contributors:        [List of other people contributors]
+ * Documentation:       Generated with assistance from OpenAI's ChatGPT.
+ * Organization:        [Robot Name] Robot - 10265 Force Green [Competition Year (YYYY-YYYY)]
+ * --------------------------------------------------------------------------------
+ */
