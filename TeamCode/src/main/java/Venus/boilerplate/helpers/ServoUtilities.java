@@ -21,7 +21,7 @@
  * .
  * --------------------------------------------------------------------------------
  * Created On:          May 5, 2025
- * Last Updated:        May 9, 2025
+ * Last Updated:        May 15, 2025
  * Original Author:     Daniel Carrillo
  * Contributors:        [Add others if applicable]
  * Documentation:       Generated with assistance from OpenAI's ChatGPT
@@ -36,29 +36,18 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 
-/**
- * Utility class for advanced servo control operations including smooth movement,
- * analog verification, range scaling, and servo state toggling.
- */
+import java.util.HashMap;
+import java.util.Map;
+
 public class ServoUtilities {
 
-    private static final double DEBOUNCE_SECONDS = 0.15;
+    private static final double DEBOUNCE_SECONDS = 0.10;
+    private static final Map<ServoImplEx, ElapsedTime> servoTimers = new HashMap<>();
+
     private static final long   SERVO_MOVEMENT_DELAY_MS = 1;
     private static final double ANALOG_POSITION_TOLERANCE = 0.10;
-    private static final double SMOOTH_POSITION_INCREMENT = 0.02;
-    private static final double END_RANGE_SLOWDOWN_DIVISOR = 5.0;
-    private static final double END_RANGE_SLOWDOWN_THRESHOLD = 0.2;
-    private static final double SERVO_RANGE_MIN = 0.0, SERVO_RANGE_MAX = 1.0;
-
-    /**
-     * Scales the servo's range of motion to standard min and max (0.0 to 1.0).
-     * @param servos One or more ServoImplEx objects to scale.
-     */
-    public static void scaleServoRange(ServoImplEx... servos) {
-        for (ServoImplEx servo : servos) {
-            servo.scaleRange(SERVO_RANGE_MIN, SERVO_RANGE_MAX);
-        }
-    }
+    private boolean isRunning = false;
+    private double targetPosition;
 
     /**
      * Disables the PWM signal for the given servos to reduce power consumption.
@@ -82,31 +71,29 @@ public class ServoUtilities {
 
     /**
      * Adjusts a servo's position based on button input with debounce protection.
-     * @param currentPosition The current position of the servo.
-     * @param increase True if the increment button is pressed.
-     * @param decrease True if the decrement button is pressed.
-     * @param debounceTimer Timer to prevent rapid toggling.
+     * @param increaseButton True if the increment button is pressed.
+     * @param decreaseButton True if the decrement button is pressed.
      * @return The new servo position after applying input.
      */
-    public static double manualPositionIncrement(double currentPosition, boolean increase, boolean decrease, ElapsedTime debounceTimer) {
-        if (increase && debounceTimer.seconds() > DEBOUNCE_SECONDS) {
-            currentPosition = Range.clip(currentPosition + SMOOTH_POSITION_INCREMENT, SERVO_RANGE_MIN, SERVO_RANGE_MAX);
-            debounceTimer.reset();
-        } else if (decrease && debounceTimer.seconds() > DEBOUNCE_SECONDS) {
-            currentPosition = Range.clip(currentPosition - SMOOTH_POSITION_INCREMENT, SERVO_RANGE_MIN, SERVO_RANGE_MAX);
-            debounceTimer.reset();
-        }
-        return currentPosition;
-    }
+    public static void manualPositionIncrement(ServoImplEx servo, boolean increaseButton, boolean decreaseButton, double increment) {
+        servoTimers.putIfAbsent(servo, new ElapsedTime());
+        ElapsedTime timer = servoTimers.get(servo);
 
-    /**
-     * Sets the servo's position only if the target differs significantly from the current.
-     * @param servo The servo to update.
-     * @param targetPosition The desired target position.
-     */
-    public static void updateServoPosition(ServoImplEx servo, double targetPosition) {
-        if (Math.abs(servo.getPosition() - targetPosition) > 0.005) {
-            servo.setPosition(targetPosition);
+        if (timer.seconds() > DEBOUNCE_SECONDS) {
+            double currentPos = servo.getPosition();
+            double newPos = currentPos;
+
+            if (increaseButton) {
+                newPos += increment;
+                timer.reset();
+            } else if (decreaseButton) {
+                newPos -= increment;
+                timer.reset();
+            }
+
+            // Clamp between 0.0 and 1.0
+            newPos = Math.max(0.0, Math.min(1.0, newPos));
+            servo.setPosition(newPos);
         }
     }
 
@@ -119,28 +106,39 @@ public class ServoUtilities {
      * @param verifyAnalog If true, verifies movement with analog sensor.
      * @param timeoutSeconds Maximum time allowed to complete the movement.
      */
-    public static void smoothlyMoveServoToTarget(ServoImplEx servo, AnalogInput analogSensor, double targetPosition, boolean verifyAnalog, double timeoutSeconds) {
-        double currentPosition = servo.getPosition();
-        ElapsedTime moveTimer = new ElapsedTime();
+    public void smoothlyMoveServoToTarget(ServoImplEx servo, AnalogInput analogSensor, double targetPosition, double servoIncrement, double servoDampener, boolean verifyAnalog, double timeoutSeconds) {
+            if (isRunning) return; // Prevent multiple motions at once
+            this.targetPosition = Range.clip(targetPosition, 0.00, 1.00);
+            Thread motionThread = new Thread(() -> {
+                isRunning = true;
+                double currentPosition = servo.getPosition();
 
-        while (Math.abs(currentPosition - targetPosition) > 0.01) {
-            double step = (targetPosition > currentPosition) ? SMOOTH_POSITION_INCREMENT : -SMOOTH_POSITION_INCREMENT;
-            if (Math.abs(targetPosition - currentPosition) <= END_RANGE_SLOWDOWN_THRESHOLD) {
-                step /= END_RANGE_SLOWDOWN_DIVISOR;
-            }
-            currentPosition += step;
-            currentPosition = Range.clip(currentPosition, SERVO_RANGE_MIN, SERVO_RANGE_MAX);
-            servo.setPosition(currentPosition);
-            delay();
+                while (Math.abs(currentPosition - targetPosition) > 0.01) {
+                    double step = (targetPosition > currentPosition) ? servoIncrement : -servoIncrement;
+                    if (Math.abs(targetPosition - currentPosition) < 0.2) {
+                        step /= servoDampener;
+                    }
 
-            if (moveTimer.seconds() > timeoutSeconds) {
-                break;
-            }
+                    currentPosition += step;
+                    currentPosition = Range.clip(currentPosition, 0.0, 1.0);
+                    servo.setPosition(currentPosition);
+
+                    try {
+                        Thread.sleep(1);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                }
+                servo.setPosition(targetPosition); // snap to final target
+                isRunning = false;
+
+                if (verifyAnalog) {
+                    waitForAnalogToReachTarget(analogSensor, targetPosition, timeoutSeconds);
+                }
+            });
+            motionThread.start();
         }
-        if (verifyAnalog) {
-            waitForAnalogToReachTarget(analogSensor, targetPosition, timeoutSeconds);
-        }
-    }
 
     /**
      * Waits until the analog sensor indicates that the servo has reached the target position, or until the timeout expires.
@@ -183,27 +181,5 @@ public class ServoUtilities {
             case "wristPos": minVoltage = 0.31; maxVoltage = 2.98; break;
         }
         return (voltage - minVoltage) / (maxVoltage - minVoltage);
-    }
-
-    /**
-     * Returns an array of formatted strings showing each servo's name and current position.
-     * @param servos One or more ServoImplEx objects to read.
-     * @return A String array of device names and positions.
-     */
-    public static String[] getAllServoPosition(ServoImplEx... servos) {
-        String[] positionStrings = new String[servos.length];
-        for (int i = 0; i < servos.length; i++) {
-            positionStrings[i] = servos[i].getDeviceName() + " Pos: " + servos[i].getPosition();
-        }
-        return positionStrings;
-    }
-
-    /** Helper function to safely pause execution. */
-    private static void delay() {
-        try {
-            Thread.sleep(ServoUtilities.SERVO_MOVEMENT_DELAY_MS);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
     }
 }

@@ -1,0 +1,96 @@
+# 📘 Robot Codebase README
+
+### *Rewritten, Rewired, Refined.*
+
+---
+
+### ⚙️ Overview
+
+This codebase represents a full overhaul of our robot's programming and control architecture. Major changes have been made across all subsystems—both in hardware wiring and software logic. Every component of the system has been rebuilt from the ground up using current best practices in modern Java development for FTC. The result is a streamlined, optimized, and more readable codebase with zero redundant logic.
+
+Every class, function, and constructor is now accompanied by meaningful JavaDocs and inline comments for clarity, making it significantly easier for current and future developers to understand, maintain, and expand the project. Component names have also been refactored for better semantic clarity, aligning with each mechanism’s purpose. Please note: If you wish to revert to Tejus's original code, you’ll need to re-download the previous version and manually restore all the original component names and wiring configurations.
+
+---
+
+### 🔍 Key Features & Functionality
+
+#### ❌ Removed Systems
+
+* **No Limelight integration**
+* **No LED system (pending reimplementation)**
+
+#### 🔄 Motion Profiles
+
+* Implemented a modified **quadratic motion profile** ("S-curve") for the slide extensions.
+* Replaces the traditional **trapezoidal (linear) motion control**, allowing smoother transitions and reduced mechanical stress.
+* Added **servo smoothing** to prevent sudden movements and reduce the risk of impact damage.
+
+#### 🤖 Autonomous Behavior
+
+* **No autonomous mode implemented**
+* **Outtake mode** does **not auto-home** the slides.
+* **Intake mode** does **auto-home** the slides on exit.
+
+#### 🔁 Mode Switching
+
+* Pressing **Square (gamepad 2)** toggles between **Intake** and **Outtake** modes.
+
+---
+
+### 🎮 Gamepad 2 Controls
+
+#### 🔽 Intake Mode
+
+* Improved wrist servo control—faster response and refined angles.
+* **Right/Left Bumper**: Wrist rotation.
+* **X Button**: Initiates full pickup > retract > transfer sequence.
+* **Circle Button**: Resets to object scan position.
+* **Right Joystick Button**: Activates Specimen Scan Mode.
+* **Triangle Button**: Runs specimen pickup > retract > transfer sequence.
+* **D-Pad Down**: Sends intake slides to pre-set pickup position.
+* **D-Pad Up**: Extends intake slides to maximum.
+* **PS Button**: Fully retracts slides into the robot.
+* **Left Joystick**: Manual slide control.
+* **Hold Right Trigger**: Enables manual override mode for slide control.
+
+#### 🔁 Transfer Mode
+
+* **Circle Button**: Opens the claw.
+* **Options Button**: Returns to Intake Mode.
+* **Touchpad Button**: Transitions into Outtake Mode.
+* If object is detected via sensor, the robot will automatically switch into Outtake Mode.
+
+#### 📦 Outtake Mode
+
+* **X Button**: Toggles between sample holding and drop-off positions.
+* **Circle Button**: Sets the specimen positioning.
+* **D-Pad Down/Up**: Sends slides to set/max height, respectively.
+* **PS Button**: Retracts slides.
+* ⚠️ *Caution: Auto-extension logic in Outtake Mode has not been fully tested.*
+
+---
+
+### 🚗 Gamepad 1 Controls (Driving)
+
+* Default drive mode is full speed.
+* **Right Trigger**: Precision drive mode (half-speed).
+* **PS Button**: Activates slow-drive mode (*not fully tested*).
+* **Left + Right Bumpers**: Resets the IMU (gyro orientation).
+* **Circle Button**: Reverses the driving direction (chassis flip).
+
+---
+
+### 🛠️ Known Issues / To-Do
+
+* ✅ **Test drive mechanics** under all speed and directional modes.
+* 🔧 **Wire management** needed for Intake and Outtake assemblies.
+* 🔄 Add **LED state machine** for better visual feedback and diagnostics.
+* 🔭 Re-implement and test **Limelight support** for automated targeting and vision processing.
+
+---
+
+### 📎 Final Notes
+
+This rewrite represents a major leap forward in our robot’s control system. It brings cleaner code, smoother operation, and lays a solid foundation for advanced features to come. We encourage contributors to explore the codebase, leave comments, and maintain the high standards of clarity and structure set in this release.
+
+*Documentation was generated with assistance from OpenAI's ChatGPT

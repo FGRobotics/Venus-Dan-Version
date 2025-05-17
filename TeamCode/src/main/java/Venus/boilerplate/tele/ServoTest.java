@@ -15,7 +15,6 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 public class ServoTest extends LinearOpMode {
 
     // Constants for servo movement
-    private static final double SERVO_INCREMENT = 0.01;
     private static final double SMOOTH_INCREMENT = 0.02;
     private static final double EPSILON = 0.001;
     private static final double MIN_POSITION = 0.0, MAX_POSITION = 1.0;
@@ -33,10 +32,10 @@ public class ServoTest extends LinearOpMode {
     private final ElapsedTime timer = new ElapsedTime();
     // Servo and analog sensor declarations
     private ServoImplEx base, joint, wrist, claw, outtakeArm, outtakeBox;
-    private AnalogInput baseAnalog, jointAnalog, wristAnalog;
+    private AnalogInput baseAnalog, jointAnalog, wristAnalog, clawAnalog, outtakeArmAnalog, outtakeBoxAnalog;
     // Servo position tracking
-    private double basePosition = 0.5, jointPosition = 0.5, wristPosition = 0.5, clawPosition = 0.5;
-    private double outtakeArmPosition = 0.5, outtakeBoxPosition = 0.5;
+    private double basePosition = 1.00, jointPosition = 0.65, wristPosition = 0.66, clawPosition = 0;
+    private double outtakeArmPosition = 0.92, outtakeBoxPosition = 0.52;
     private boolean freeMoveMode = false;
     private boolean runningAutoAction = false;
     private boolean manualOverride = true;
@@ -72,6 +71,9 @@ public class ServoTest extends LinearOpMode {
         baseAnalog = hardwareMap.get(AnalogInput.class, "basePos");
         jointAnalog = hardwareMap.get(AnalogInput.class, "jointPos");
         wristAnalog = hardwareMap.get(AnalogInput.class, "wristPos");
+        clawAnalog = hardwareMap.get(AnalogInput.class, "clawPos");
+        outtakeArmAnalog = hardwareMap.get(AnalogInput.class, "outtakeArmPos");
+        outtakeBoxAnalog = hardwareMap.get(AnalogInput.class, "outtakeBoxPos");
 
         scaleServos();
     }
@@ -122,32 +124,34 @@ public class ServoTest extends LinearOpMode {
 
     // Handles button inputs to trigger automated sequences
     private void handleButtonPresses() {
-        // if (gamepad1.ps) runPickupSequence();
-        // if (gamepad1.start) runDeliverSequence();
-        // if (gamepad1.square) runScanSequence();
-        // if (gamepad1.circle) runMiddleSequence();
+        if (gamepad1.ps) runPickupSequence();
+        if (gamepad1.start) runDeliverSequence();
+        if (gamepad1.square) runScanSequence();
+        if (gamepad1.circle) runMiddleSequence();
     }
 
     // Allows user to control each servo manually using game-pad
     private void controlServosManually() {
-        basePosition = controlSingleServo(basePosition, gamepad1.dpad_up, gamepad1.dpad_down);
-        jointPosition = controlSingleServo(jointPosition, gamepad1.left_bumper, gamepad1.left_trigger > 0.2);
-        outtakeArmPosition = controlSingleServo(outtakeArmPosition, gamepad1.triangle, gamepad1.cross);
-        outtakeBoxPosition = controlSingleServo(outtakeBoxPosition, gamepad1.right_bumper, gamepad1.right_trigger > 0.2);
-        wristPosition = controlSingleServo(wristPosition, gamepad1.left_stick_x > 0.2, gamepad1.left_stick_x < -0.2);
-        clawPosition = controlSingleServo(clawPosition, gamepad1.right_stick_y > 0.2, gamepad1.right_stick_y < -0.2);
+        basePosition = controlSingleServo(basePosition, 0.01, gamepad1.dpad_up, gamepad1.dpad_down);
+        jointPosition = controlSingleServo(jointPosition, 0.01, gamepad1.left_bumper, gamepad1.left_trigger > 0.2);
+        outtakeArmPosition = controlSingleServo(outtakeArmPosition, 0.01, gamepad1.triangle, gamepad1.cross);
+        outtakeBoxPosition = controlSingleServo(outtakeBoxPosition, 0.01, gamepad1.right_bumper, gamepad1.right_trigger > 0.2);
+        wristPosition = controlSingleServo(wristPosition, 0.01, gamepad1.left_stick_x > 0.2, gamepad1.left_stick_x < -0.2);
+        clawPosition = controlSingleServo(clawPosition, 0.5, gamepad1.right_stick_y > 0.2, gamepad1.right_stick_y < -0.2);
+
+        base.setPosition(controlSingleServo(basePosition, 0.01, gamepad1.dpad_up, gamepad1.dpad_down));
     }
 
     // Moves a single servo in small increments based on input
-    private double controlSingleServo(double position, boolean increase, boolean decrease) {
+    private double controlSingleServo(double position, double increment, boolean increase, boolean decrease) {
         if (increase) {
             if (timer.seconds() > MIN_WAIT_TIME) {
-                position = Math.min(position + SERVO_INCREMENT, MAX_POSITION);
+                position = Math.min(position + increment, MAX_POSITION);
                 timer.reset();
             }
         } else if (decrease) {
             if (timer.seconds() > MIN_WAIT_TIME) {
-                position = Math.max(position - SERVO_INCREMENT, MIN_POSITION);
+                position = Math.max(position - increment, MIN_POSITION);
                 timer.reset();
             }
         }
@@ -205,10 +209,10 @@ public class ServoTest extends LinearOpMode {
     private void runPickupSequence() {
         runningAutoAction = true;
         manualOverride = false;
-        moveServoSmoothlyAndSet(wrist, 0.68);
-        waitForServoToReachPosition(wristAnalog, 0.68);
-        moveServoSmoothlyAndSet(joint, 0.25);
-        waitForServoToReachPosition(jointAnalog, 0.25);
+        moveServoSmoothlyAndSet(wrist, 0.66);
+        //waitForServoToReachPosition(wristAnalog, 0.0.66);
+        moveServoSmoothlyAndSet(joint, 0.83);
+        //waitForServoToReachPosition(jointAnalog, 0.83);
         moveServoSmoothlyAndSet(base, 0.18);
         waitForServoToReachPosition(baseAnalog, 0.18);
         runningAutoAction = false;
@@ -218,12 +222,12 @@ public class ServoTest extends LinearOpMode {
     private void runScanSequence() {
         runningAutoAction = true;
         manualOverride = false;
-        moveServoSmoothlyAndSet(wrist, 0.68);
-        waitForServoToReachPosition(wristAnalog, 0.68);
-        moveServoSmoothlyAndSet(joint, 0.20);
-        waitForServoToReachPosition(jointAnalog, 0.20);
-        moveServoSmoothlyAndSet(base, 0.30);
-        waitForServoToReachPosition(baseAnalog, 0.30);
+        moveServoSmoothlyAndSet(wrist, 0.66);
+        //waitForServoToReachPosition(wristAnalog, 0.66);
+        moveServoSmoothlyAndSet(joint, 1.00);
+        //waitForServoToReachPosition(jointAnalog, 1.00);
+        moveServoSmoothlyAndSet(base, 0.50);
+        waitForServoToReachPosition(baseAnalog, 0.50);
         runningAutoAction = false;
         manualOverride = true;
     }
@@ -231,10 +235,10 @@ public class ServoTest extends LinearOpMode {
     private void runMiddleSequence() {
         runningAutoAction = true;
         manualOverride = false;
-        moveServoSmoothlyAndSet(wrist, 0.68);
-        waitForServoToReachPosition(wristAnalog, 0.68);
-        moveServoSmoothlyAndSet(joint, 0.50);
-        waitForServoToReachPosition(jointAnalog, 0.50);
+        moveServoSmoothlyAndSet(wrist, 0.66);
+        //waitForServoToReachPosition(wristAnalog, 0.66);
+        moveServoSmoothlyAndSet(joint, 0.65);
+        //waitForServoToReachPosition(jointAnalog, 0.65);
         moveServoSmoothlyAndSet(base, 1.00);
         waitForServoToReachPosition(baseAnalog, 1.00);
         runningAutoAction = false;
@@ -245,10 +249,12 @@ public class ServoTest extends LinearOpMode {
     private void runDeliverSequence() {
         runningAutoAction = true;
         manualOverride = false;
-        moveServoSmoothlyAndSet(base, 0.93);
-        waitForServoToReachPosition(baseAnalog, 0.93);
-        moveServoSmoothlyAndSet(joint, 1.0);
-        waitForServoToReachPosition(jointAnalog, 1.0);
+        moveServoSmoothlyAndSet(wrist, 0.66);
+        //waitForServoToReachPosition(wristAnalog, 0.66);
+        moveServoSmoothlyAndSet(base, 0.8);
+        waitForServoToReachPosition(baseAnalog, 0.8);
+        moveServoSmoothlyAndSet(joint, 0.01);
+        //waitForServoToReachPosition(jointAnalog, 0.0.01);
         runningAutoAction = false;
         manualOverride = true;
     }
@@ -260,7 +266,7 @@ public class ServoTest extends LinearOpMode {
 
         while (opModeIsActive() && Math.abs(currentPosition - targetPosition) > EPSILON) {
             double increment = (Math.abs(targetPosition - currentPosition) > 0.2)
-                    ? SMOOTH_INCREMENT : SMOOTH_INCREMENT / 5.0;
+                    ? SMOOTH_INCREMENT : SMOOTH_INCREMENT / 10.0;
 
             currentPosition = currentPosition < targetPosition
                     ? Math.min(currentPosition + increment, targetPosition)
@@ -288,6 +294,9 @@ public class ServoTest extends LinearOpMode {
         sendAnalogTelemetry("Base", baseAnalog, base);
         sendAnalogTelemetry("Joint", jointAnalog, joint);
         sendAnalogTelemetry("Wrist", wristAnalog, wrist);
+        sendAnalogTelemetry("Claw", clawAnalog, claw);
+        sendAnalogTelemetry("Outtake Arm", outtakeArmAnalog, outtakeArm);
+        sendAnalogTelemetry("Outtake Box", outtakeBoxAnalog, outtakeBox);
 
         telemetry.addLine();
         telemetry.addData("Free-Move Mode", freeMoveMode ? "ENABLED" : "DISABLED");
@@ -310,8 +319,9 @@ public class ServoTest extends LinearOpMode {
         }
 
         telemetry.addData(label + " Voltage", analogInput.getVoltage());
-        telemetry.addData(label + " Position", mapVoltageToPosition(analogInput.getVoltage(), MIN_VOLTAGE, MAX_VOLTAGE));
+        //telemetry.addData(label + " Position", mapVoltageToPosition(analogInput.getVoltage(), MIN_VOLTAGE, MAX_VOLTAGE));
         telemetry.addData(label + " Commanded", servo.getPosition());
+        telemetry.addLine();
 
     }
 

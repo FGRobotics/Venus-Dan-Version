@@ -24,7 +24,7 @@
  * .
  * --------------------------------------------------------------------------------
  * Created On:          May 6, 2025
- * Last Updated:        May 6, 2025
+ * Last Updated:        May 15, 2025
  * Original Author:     Daniel Carrillo
  * Contributors:        [Add others if applicable]
  * Documentation:       Generated with assistance from Gemini.
@@ -34,21 +34,21 @@
 
 package Venus.boilerplate.outtake;
 
-import com.qualcomm.robotcore.util.ElapsedTime;
+import Venus.boilerplate.helpers.ServoUtilities;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
-import static Venus.boilerplate.helpers.ServoUtilities.smoothlyMoveServoToTarget;
-
 public class ArmAndBox {
-    private final ServoImplEx outtakeArmServo, outtakeBoxServo;
+    public final ServoImplEx outtakeArmServo, outtakeBoxServo;
     private final AnalogInput outtakeArmAnalog, outtakeBoxAnalog;
 
     public DistanceSensor objectDistanceSensor;
-    public boolean isObjectSensorStatic = false; // Renamed for clarity
+    public boolean isObjectSensorStatic = false;
+
+    private final ServoUtilities servoUtils = new ServoUtilities();
 
     public ArmAndBox(HardwareMap hardwareMap) {
         outtakeArmServo = hardwareMap.get(ServoImplEx.class, "outtakeArm");
@@ -57,31 +57,39 @@ public class ArmAndBox {
         outtakeArmAnalog = hardwareMap.get(AnalogInput.class, "outtakeArmPos");
         outtakeBoxAnalog = hardwareMap.get(AnalogInput.class, "outtakeBoxPos");
 
-        objectDistanceSensor = hardwareMap.get(DistanceSensor.class, "color"); // Renamed for clarity
+        objectDistanceSensor = hardwareMap.get(DistanceSensor.class, "color");
     }
 
-    public void setOuttakeArmUp() {outtakeArmServo.setPosition(0);}
+    public void setOuttakeSampleDeliver() {
+        setOuttakeBoxSample();
+        setOuttakeArmSample();
+    }
+    public void setOuttakeSpecimenDeliver() {
+        setOuttakeBoxSpecimen();
+        setOuttakeArmSpecimen();
+    }
+    public void setOuttakeMechanismTransfer() {
+        setOuttakeBoxTransfer();
+        setOuttakeArmTransfer();
+    }
+
+    // Arm Servo: 0:1 = Up:Down
+    // Box Servo: 0:1 = Parallel:Perpendicular
+
+    public void setOuttakeArmUp() {servoUtils.smoothlyMoveServoToTarget(outtakeArmServo, outtakeArmAnalog,0.01, 0.02, 2, false, -1);}
     public void setOuttakeArmDown() {outtakeArmServo.setPosition(1);}
 
-    public void setOuttakeArmTransfer() {outtakeArmServo.setPosition(0.85);} // 0:1 = Up:Down
-    public void setOuttakeBoxTransfer() {outtakeBoxServo.setPosition(0.2);}  // 0:1 = Parallel:Perpendicular
-    public void setOuttakeBoxTransferAdjusted() {outtakeBoxServo.setPosition(0.3);}
+    public void setOuttakeArmTransfer() {servoUtils.smoothlyMoveServoToTarget(outtakeArmServo, outtakeArmAnalog,0.90, 0.05, 5, false, -1);}
+    public void setOuttakeBoxTransfer() {servoUtils.smoothlyMoveServoToTarget(outtakeBoxServo, outtakeBoxAnalog,0.40, 0.05, 10, false, -1);}
+    //public void setOuttakeBoxTransferAdjusted() {outtakeBoxServo.setPosition(0.00);}
 
-    public void setOuttakeBoxSpecimen() {outtakeBoxServo.setPosition(0.63);}
-    public void setOuttakeBoxDrop() {outtakeBoxServo.setPosition(0);}
-    public void setOuttakeBoxAutoDrop() {outtakeBoxServo.setPosition(0.18);}
+    public void setOuttakeArmSpecimen() {servoUtils.smoothlyMoveServoToTarget(outtakeArmServo, outtakeArmAnalog,0.16, 0.05, 10, false, -1);}
+    public void setOuttakeBoxSpecimen() {servoUtils.smoothlyMoveServoToTarget(outtakeBoxServo, outtakeBoxAnalog,0.12, 0.05, 10, false, -1);}
 
-    public void setOuttakeMechanismTransfer() {
-        setOuttakeArmTransfer();
-        setOuttakeBoxTransferAdjusted();
-        delay(100);
-        setOuttakeArmTransfer();
-    }
+    public void setOuttakeArmSample() {servoUtils.smoothlyMoveServoToTarget(outtakeArmServo, outtakeArmAnalog,0.01, 0.05, 10, false, -1);}
+    public void setOuttakeBoxSample() {servoUtils.smoothlyMoveServoToTarget(outtakeBoxServo, outtakeBoxAnalog,0.01, 0.05, 10, false, -1);}
+    public void setOuttakeBoxSampleDrop() {outtakeBoxServo.setPosition(1.00);}
 
-    public void setOuttakeFullSpecimen() {
-        setOuttakeArmUp();
-        setOuttakeBoxSpecimen();
-    }
 
     /**
      * Checks if an object is present based on the distance sensor reading.
@@ -101,17 +109,5 @@ public class ArmAndBox {
         }
         // If the sensor is static, we cannot reliably detect an object
         return false;
-    }
-
-    /**
-     * Pauses execution for a specified number of milliseconds using ElapsedTime.
-     * @param millis Milliseconds to sleep
-     */
-    public void delay(long millis) {
-        ElapsedTime timer = new ElapsedTime();
-        timer.reset();
-        while (timer.milliseconds() < millis) {
-            Thread.yield();
-        }
     }
 }

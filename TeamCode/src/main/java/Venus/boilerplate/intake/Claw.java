@@ -19,19 +19,12 @@
  * .
  * --------------------------------------------------------------------------------
  * Created On:          May 6, 2025
- * Last Updated:        May 6, 2025
+ * Last Updated:        May 15, 2025
  * Original Author:     Daniel Carrillo
  * Contributors:        [Add others if applicable]
  * Documentation:       Generated with assistance from OpenAI's ChatGPT
  * Organization:        Venus Robot - 10265 Force Green 2024-2025
  * --------------------------------------------------------------------------------
- */
-
-/*
-Claw: 0:1 = Open:Close
-Wrist: 0:1 = PowerSide:VoltageSide (Purple)
-Joint: 0:1 =        (Yellow)
-Base: 0:1 = Down:Up (Red)
  */
 
 package Venus.boilerplate.intake;
@@ -40,10 +33,11 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.hardware.AnalogInput;
-import static Venus.boilerplate.helpers.ServoUtilities.smoothlyMoveServoToTarget;
+import Venus.boilerplate.helpers.ServoUtilities;
 
 public class Claw {
-    public final ServoImplEx baseServo, jointServo, wristServo, clawServo;
+    private final ServoUtilities servoUtils = new ServoUtilities();
+    public final  ServoImplEx baseServo, jointServo, wristServo, clawServo;
     private final AnalogInput baseAnalog;
     private final AnalogInput jointAnalog;
     private final AnalogInput wristAnalog;
@@ -59,92 +53,72 @@ public class Claw {
         wristAnalog = hardwareMap.get(AnalogInput.class, "wristPos");
     }
 
-    public void setWristNeutral() {wristServo.setPosition(0.00);}
+/*
+Claw: 0:1 = Open:Close
+Wrist: 0:1 = PowerSide:VoltageSide (Purple)
+Joint: 0:1 =        (Yellow)
+Base: 0:1 = Down:Up (Red)
+ */
+    public void setWristNeutral() {wristServo.setPosition(0.66);}
     public void closeClaw()       {clawServo.setPosition(1.00);}
     public void openClaw()        {clawServo.setPosition(0.00);}
 
     public void pickup() {
-        delay(300);
         setIntakePickup();
-        delay(300);
+        delay(150);
         closeClaw();
-        delay(300);
-        setIntakeRetract();
     }
 
     public void specimenPickupSequence() {
-        setSpecimenFloorScan();
-        delay(1200);
         setSpecimenFloorPickUp();
-        delay(200);
         closeClaw();
-        delay(200);
     }
 
     public void setIntakeScan() {
         setWristNeutral();
-        smoothlyMoveServoToTarget(jointServo, jointAnalog, 0.00, true, -1);
-        smoothlyMoveServoToTarget(baseServo, baseAnalog, 0.00, true, -1);
+        servoUtils.smoothlyMoveServoToTarget(jointServo, jointAnalog, 0.91, 0.05, 20, false, -1);
+        servoUtils.smoothlyMoveServoToTarget(baseServo, baseAnalog, 0.37, 0.1, 10,true, -1);
         openClaw();
     }
 
     public void setNoWristScan() {
-        smoothlyMoveServoToTarget(jointServo, jointAnalog, 0.00, true, -1);
-        smoothlyMoveServoToTarget(baseServo, baseAnalog, 0.00, true, -1);
+        servoUtils.smoothlyMoveServoToTarget(jointServo, jointAnalog, 0.91, 0.05, 20, false, -1);
+        servoUtils.smoothlyMoveServoToTarget(baseServo, baseAnalog, 0.37, 0.1, 10, true, -1);
         openClaw();
     }
 
     public void setIntakePickup() {
         openClaw();
-        smoothlyMoveServoToTarget(jointServo, jointAnalog, 0.00, true, -1);
-        smoothlyMoveServoToTarget(baseServo, baseAnalog, 0.00, true, -1);
+        servoUtils.smoothlyMoveServoToTarget(jointServo, jointAnalog, 0.83, 0.1, 5, false, -1);
+        servoUtils.smoothlyMoveServoToTarget(baseServo, baseAnalog, 0.18, 0.1, 5,true, -1);
     }
 
     public void setIntakeRetract() {
         setWristNeutral();
-        smoothlyMoveServoToTarget(jointServo, jointAnalog, 0.00, true, -1);
-        smoothlyMoveServoToTarget(baseServo, baseAnalog, 0.00, true, -1);
+        servoUtils.smoothlyMoveServoToTarget(jointServo, jointAnalog, 0.65, 0.1, 5, false, -1);
+        servoUtils.smoothlyMoveServoToTarget(baseServo, baseAnalog, 1.00, 0.1, 5, true, -1);
     }
 
     public void setIntakeTransfer() {
         setWristNeutral();
-        smoothlyMoveServoToTarget(baseServo, baseAnalog, 0.00, true, -1);
-        smoothlyMoveServoToTarget(jointServo, jointAnalog, 0.00, true, -1);
-    }
-
-    public void setIntakeWallPickup() {
-        setWristNeutral();
-        smoothlyMoveServoToTarget(jointServo, jointAnalog, 0.00, true, -1);
-        smoothlyMoveServoToTarget(baseServo, baseAnalog, 0.00, true, -1);
-        openClaw();
-    }
-
-    public void setIntakeWallScan() {
-        closeClaw();
-        delay(200);
-        setWristNeutral();
-        smoothlyMoveServoToTarget(jointServo, jointAnalog, 0.00, true, -1);
-        smoothlyMoveServoToTarget(baseServo, baseAnalog, 0.00, true, -1);
-    }
-
-
-    public void setSpecimenFloorPickUp() {
-        openClaw();
-        smoothlyMoveServoToTarget(jointServo, jointAnalog, 0.00, true, -1);
-        smoothlyMoveServoToTarget(baseServo, baseAnalog, 0.00, true, -1);
-        delay(200);
+        servoUtils.smoothlyMoveServoToTarget(jointServo, jointAnalog, 0.01, 0.05, 10, false, -1);
+        servoUtils.smoothlyMoveServoToTarget(baseServo, baseAnalog, 0.80, 0.1, 10, true, -1);
     }
 
     public void setSpecimenFloorScan() {
         openClaw();
-        smoothlyMoveServoToTarget(jointServo, jointAnalog, 0.00, true, -1);
-        smoothlyMoveServoToTarget(baseServo, baseAnalog, 0.00, true, -1);
+        setWristNeutral();
+        servoUtils.smoothlyMoveServoToTarget(jointServo, jointAnalog, 0.67, 0.05, 10, false, -1);
+        servoUtils.smoothlyMoveServoToTarget(baseServo, baseAnalog, 0.15, 0.1, 10, true, -1);
     }
 
-    /**
-     * Pauses execution for a specified number of milliseconds using ElapsedTime.
-     * @param millis Milliseconds to sleep
-     */
+    public void setSpecimenFloorPickUp() {
+        openClaw();
+        setWristNeutral();
+        servoUtils.smoothlyMoveServoToTarget(jointServo, jointAnalog, 0.67, 0.05, 10, false, -1);
+        servoUtils.smoothlyMoveServoToTarget(baseServo, baseAnalog, 0.15, 0.1, 10, true, -1);
+    }
+
     public void delay(long millis) {
         ElapsedTime timer = new ElapsedTime();
         timer.reset();
