@@ -1,9 +1,3 @@
-# 📘 Robot Codebase README
-
-### *Rewritten, Rewired, Refined.*
-
----
-
 ### ⚙️ Overview
 
 This codebase represents a full overhaul of our robot's programming and control architecture. Major changes have been made across all subsystems—both in hardware wiring and software logic. Every component of the system has been rebuilt from the ground up using current best practices in modern Java development for FTC. The result is a streamlined, optimized, and more readable codebase with zero redundant logic.
@@ -88,9 +82,4 @@ Every class, function, and constructor is now accompanied by meaningful JavaDocs
 * 🔭 Re-implement and test **Limelight support** for automated targeting and vision processing.
 
 ---
-
-### 📎 Final Notes
-
-This rewrite represents a major leap forward in our robot’s control system. It brings cleaner code, smoother operation, and lays a solid foundation for advanced features to come. We encourage contributors to explore the codebase, leave comments, and maintain the high standards of clarity and structure set in this release.
-
 *Documentation was generated with assistance from OpenAI's ChatGPT
